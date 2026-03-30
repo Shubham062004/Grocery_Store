@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { apiService } from '@/services/api'; // Import API service
+import { authService } from '@/services/api';
 
 const Login = () => {
   const { toast } = useToast();
@@ -22,43 +23,43 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const response = await apiService.login(email, password);
+      const { data } = await authService.login({ email, password });
       
-      if (response.success && response.data) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        toast({
-          title: "Login successful",
-          description: response.message,
-        });
-        
-        navigate('/');
-      }
-    } catch (error) {
+      // Store user info (including JWT) in localStorage
+      localStorage.setItem('user', JSON.stringify(data));
+      
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${data.name}!`,
+      });
+      
+      navigate('/');
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : 'An error occurred during login',
+        description: error.response?.data?.message || "Please check your credentials and try again.",
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   const handleBackdropClick = () => {
     navigate('/');
   };
-
+  
   return (
     <div className="min-h-screen flex flex-col bg-background dark:bg-gray-900">
+      <Header />
+      
       {/* Modal backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
         onClick={handleBackdropClick}
       ></div>
       
-      <main className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 z-50">
+      <main className="flex-grow flex items-center justify-center p-4 z-50 relative">
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -70,7 +71,7 @@ const Login = () => {
             <CardHeader className="space-y-1 text-center">
               <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
               <CardDescription>
-                Enter your credentials to sign in to your account
+                Enter your credentials to access your account
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -102,18 +103,18 @@ const Login = () => {
                       required
                     />
                   </div>
+                  <div className="text-sm text-right">
+                    <Link to="#" className="text-primary hover:text-primary/80">
+                      Forgot password?
+                    </Link>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : (
-                    <>
-                      Sign in
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
+                  {isLoading ? "Logging in..." : "Login"}
                 </Button>
               </form>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-4">
               <div className="text-sm text-center w-full text-muted-foreground">
                 Don't have an account?{" "}
                 <Link to="/signup" className="text-primary hover:underline">
@@ -124,6 +125,7 @@ const Login = () => {
           </Card>
         </motion.div>
       </main>
+      <Footer />
     </div>
   );
 };

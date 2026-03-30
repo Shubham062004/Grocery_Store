@@ -168,7 +168,7 @@ const ProductDetail = () => {
                         className="h-10 w-10 rounded-full"
                         onClick={handleDecreaseQuantity}
                       >
-                        <Minus size={100} />
+                        <Minus size={16} />
                       </Button>
                       
                       <span className="w-10 text-center text-lg font-medium">
@@ -178,10 +178,10 @@ const ProductDetail = () => {
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        className="h-10 w-10 rounded-full" 
+                        className="h-10 w-10 rounded-full"
                         onClick={handleAddToCart}
                       >
-                        <Plus size={100} />
+                        <Plus size={16} />
                       </Button>
                     </div>
                   </div>

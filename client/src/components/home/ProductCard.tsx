@@ -5,7 +5,7 @@ import { useCart, Product } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import ProductDetailModal from '../product/ProductDetailModal';
+import ProductDetailModal from './ProductDetailModal';
 
 interface ProductCardProps {
   product: Product;

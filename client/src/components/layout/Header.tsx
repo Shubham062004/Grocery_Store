@@ -76,6 +76,49 @@ const Header: React.FC = () => {
           
           {/* Right side navigation buttons */}
           <div className="flex items-center gap-3">
+            {/* User or Login buttons */}
+            {isLoggedIn ? (
+              <div className="relative group">
+                <Button 
+                  variant="ghost" 
+                  className="p-2 rounded-full group-hover:bg-blink/10 group-hover:text-blink dark:group-hover:bg-blink-600/20 dark:group-hover:text-blink-400 smooth-transition"
+                  aria-label="User Account"
+                >
+                  <User className="h-5 w-5" />
+                </Button>
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg overflow-hidden z-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                  <div className="py-2">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Link to="/login">
+                <Button 
+                  variant="ghost" 
+                  className="p-2 rounded-full hover:bg-blink/10 hover:text-blink dark:hover:bg-blink-600/20 dark:hover:text-blink-400 smooth-transition"
+                  aria-label="Login"
+                >
+                  <LogIn className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
+            
+            {/* Manager link */}
+            <Link to="/manager">
+              <Button 
+                variant="ghost" 
+                className="p-2 rounded-full hover:bg-blink/10 hover:text-blink dark:hover:bg-blink-600/20 dark:hover:text-blink-400 smooth-transition"
+                aria-label="Manager Dashboard"
+              >
+                <User size={22} />
+              </Button>
+            </Link>
             
             {/* Menu link */}
             <Link to="/menu">
@@ -110,40 +153,6 @@ const Header: React.FC = () => {
                 </span>
               )}
             </Button>
-
-            {/* User or Login buttons */}
-            {isLoggedIn ? (
-              <div className="relative group">
-                <Button 
-                  variant="ghost" 
-                  className="p-2 rounded-full group-hover:bg-blink/10 group-hover:text-blink dark:group-hover:bg-blink-600/20 dark:group-hover:text-blink-400 smooth-transition"
-                  aria-label="User Account"
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg overflow-hidden z-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                  <div className="py-2">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <Link to="/login">
-                <Button 
-                  variant="ghost" 
-                  className="p-2 rounded-full hover:bg-blink/10 hover:text-blink dark:hover:bg-blink-600/20 dark:hover:text-blink-400 smooth-transition"
-                  aria-label="Login"
-                >
-                  <LogIn className="h-5 w-5" />
-                </Button>
-              </Link>
-            )}
-    
           </div>
         </div>
       </div>

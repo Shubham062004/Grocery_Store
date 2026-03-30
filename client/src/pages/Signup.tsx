@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Lock, Mail, User, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { apiService } from '@/services/api'; // Import API service
+import { authService } from '@/services/api';
 
 const Signup = () => {
   const { toast } = useToast();
@@ -24,43 +25,43 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      const response = await apiService.signup(email, password, name, phone);
+      const { data } = await authService.register({ name, email, password });
       
-      if (response.success && response.data) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        toast({
-          title: "Account created",
-          description: response.message,
-        });
-        
-        navigate('/');
-      }
-    } catch (error) {
+      // Store user info (including JWT) in localStorage
+      localStorage.setItem('user', JSON.stringify(data));
+      
+      toast({
+        title: "Account created",
+        description: `Welcome to Balaji Store, ${data.name}!`,
+      });
+      
+      navigate('/');
+    } catch (error: any) {
       toast({
         title: "Signup failed",
-        description: error instanceof Error ? error.message : 'An error occurred during signup',
+        description: error.response?.data?.message || "Please fill all required fields correctly.",
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   const handleBackdropClick = () => {
     navigate('/');
   };
-
+  
   return (
     <div className="min-h-screen flex flex-col bg-background dark:bg-gray-900">
+      <Header />
+      
       {/* Modal backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
         onClick={handleBackdropClick}
       ></div>
       
-      <main className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 z-50">
+      <main className="flex-grow flex items-center justify-center p-4 z-50 relative">
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -148,6 +149,7 @@ const Signup = () => {
           </Card>
         </motion.div>
       </main>
+      <Footer />
     </div>
   );
 };
