@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
 import CategorySection from '@/components/home/CategorySection';
-import { apiService, Product } from '@/services/api'; // Changed: Import API instead of local products
+import { allProducts } from '@/data/products';
 import LocationSelector from '@/components/ui/LocationSelector';
 import FreeDeliveryBanner from '@/components/home/FreeDeliveryBanner';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -13,14 +14,16 @@ import { Button } from '@/components/ui/button';
 import { Package, MessageCircle } from 'lucide-react';
 import { useScrollReveal, applySequentialAnimations } from '@/utils/scrollAnimation';
 import ChatbotButton from '@/components/ui/ChatbotButton';
+import { motion } from 'framer-motion';
+import { PageLoadingSkeleton } from '@/components/ui/SkeletonLoaders';
+import { LoadingTransition } from '@/components/ui/PageTransition';
+import { useLoadingState } from '@/hooks/useLoadingState';
+import { HoverScale, FloatingElement } from '@/components/ui/MicroAnimations';
 
 const Index = () => {
   const [isLocationSelectorOpen, setIsLocationSelectorOpen] = useState(false);
   const [location, setLocation] = useState('Select Location');
-  
-  // Changed: Add state for products from API
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isLoading, setLoading } = useLoadingState();
 
   // Use the scroll reveal animation
   useScrollReveal({ 
@@ -29,45 +32,37 @@ const Index = () => {
     rootMargin: '0px 0px -100px 0px'
   });
 
-  // Changed: Load products from backend API
+  // Simulate initial page load
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const response = await apiService.getProducts();
-        setAllProducts(response.data);
-        console.log('✅ Products loaded for home page:', response.data.length);
-      } catch (error) {
-        console.error('❌ Failed to load products:', error);
-        setAllProducts([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadProducts();
-  }, []);
-
-  // Apply sequential animations to products
-  useEffect(() => {
-    if (allProducts.length > 0) {
+    const initializeApp = async () => {
+      setLoading(true);
+      
+      // Simulate loading time for better UX
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       applySequentialAnimations(
         '.grid', 
         '.food-card', 
         'animate-fade-in', 
         0.05
       );
-    }
-  }, [allProducts]); // Changed: Trigger animations when products load
+      
+      setLoading(false);
+    };
+    
+    initializeApp();
+  }, [setLoading]);
 
-  // Group products by category (same logic as before)
+  // Group products by category
   const productsByCategory = allProducts.reduce((acc, product) => {
     if (!acc[product.category]) {
       acc[product.category] = [];
     }
     acc[product.category].push(product);
     return acc;
-  }, {} as Record<string, Product[]>); // Changed: Use Product[] type
+  }, {} as Record<string, typeof allProducts>);
 
-  // Sort categories to show most popular first (same as before)
+  // Sort categories to show most popular first
   const sortedCategories = Object.keys(productsByCategory).sort((a, b) => {
     const popularOrder = ['Dairy', 'Bakery', 'Beverages', 'Snacks', 'Fruits', 'Vegetables'];
     const aIndex = popularOrder.indexOf(a);
@@ -80,67 +75,88 @@ const Index = () => {
 
   return (
     <CartProvider>
-      <div className="min-h-screen flex flex-col bg-background dark:bg-gray-900 text-foreground dark:text-gray-100">
-        <Header />
-        
-        <main className="flex-grow pt-16">
-          <Hero />
-          <div className="container mx-auto px-4">
-            <div className="reveal reveal-from-bottom py-4">
-              <FreeDeliveryBanner />
-            </div>
-            <div className="py-4 flex justify-between reveal reveal-from-right">
-              <Link to="/support">
-                <Button variant="outline" className="flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 hover:text-blink hover:border-blink hover:bg-blink/10 dark:hover:border-blink-400 dark:hover:text-blink-400 dark:hover:bg-blink-400/10 hover-scale">
-                  <MessageCircle className="h-4 w-4" />
-                  <span>Customer Support</span>
-                </Button>
-              </Link>
-              <Link to="/menu">
-                <Button variant="outline" className="flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 hover:text-blink hover:border-blink hover:bg-blink/10 dark:hover:border-blink-400 dark:hover:text-blink-400 dark:hover:bg-blink-400/10 hover-scale">
-                  <Package className="h-4 w-4" />
-                  <span>Full Menu</span>
-                </Button>
-              </Link>
-            </div>
-          </div>
+      <LoadingTransition isLoading={isLoading} fallback={<PageLoadingSkeleton />}>
+        <div className="min-h-screen flex flex-col bg-background dark:bg-gray-900 text-foreground dark:text-gray-100">
+          <Header />
           
-          {/* Changed: Add loading state */}
-          {isLoading ? (
-            <div className="container mx-auto px-4 text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className="mt-2 text-muted-foreground">Loading products...</p>
+          <main className="flex-grow pt-16">
+            <Hero />
+            <div className="container mx-auto px-4">
+              <motion.div 
+                className="reveal reveal-from-bottom py-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <FreeDeliveryBanner />
+              </motion.div>
+              <motion.div 
+                className="py-4 flex flex-col sm:flex-row gap-4 sm:justify-between reveal reveal-from-right"
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <Link to="/support">
+                  <HoverScale>
+                    <Button variant="outline" className="w-full sm:w-auto flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 hover:text-blink hover:border-blink hover:bg-blink/10 dark:hover:border-blink-400 dark:hover:text-blink-400 dark:hover:bg-blink-400/10 transition-all duration-200">
+                      <MessageCircle className="h-4 w-4" />
+                      <span>Customer Support</span>
+                    </Button>
+                  </HoverScale>
+                </Link>
+                <Link to="/menu">
+                  <HoverScale>
+                    <Button variant="outline" className="w-full sm:w-auto flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 hover:text-blink hover:border-blink hover:bg-blink/10 dark:hover:border-blink-400 dark:hover:text-blink-400 dark:hover:bg-blink-400/10 transition-all duration-200">
+                      <Package className="h-4 w-4" />
+                      <span>Full Menu</span>
+                    </Button>
+                  </HoverScale>
+                </Link>
+              </motion.div>
             </div>
-          ) : (
-            /* Display all categories (same as before) */
-            sortedCategories.map((category) => (
-              <div key={category} className="reveal reveal-from-bottom">
+            
+            {/* Display all categories */}
+            {sortedCategories.map((category, index) => (
+              <motion.div 
+                key={category} 
+                className="reveal reveal-from-bottom"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.1 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
                 <CategorySection 
                   title={category} 
                   products={productsByCategory[category]} 
                 />
-              </div>
-            ))
-          )}
-        </main>
-        
-        <Footer />
-        
-        {/* Theme toggle - moved to bottom right corner */}
-        <div className="fixed bottom-4 right-4 z-50">
-          <ThemeToggle />
+              </motion.div>
+            ))}
+          </main>
+          
+          <Footer />
+          
+          {/* Theme toggle - moved to bottom right corner */}
+          <FloatingElement className="fixed bottom-4 right-4 z-50" duration={4} range={5}>
+            <HoverScale>
+              <ThemeToggle />
+            </HoverScale>
+          </FloatingElement>
+          
+          {/* Chatbot button */}
+          <FloatingElement className="fixed bottom-20 right-4 z-50" duration={3} range={8}>
+            <ChatbotButton />
+          </FloatingElement>
+          
+          {/* Modals */}
+          <LocationSelector 
+            isOpen={isLocationSelectorOpen}
+            onClose={() => setIsLocationSelectorOpen(false)}
+            onSelectLocation={(loc) => setLocation(loc)}
+          />
         </div>
-        
-        {/* Chatbot button */}
-        <ChatbotButton />
-        
-        {/* Modals */}
-        <LocationSelector 
-          isOpen={isLocationSelectorOpen}
-          onClose={() => setIsLocationSelectorOpen(false)}
-          onSelectLocation={(loc) => setLocation(loc)}
-        />
-      </div>
+      </LoadingTransition>
     </CartProvider>
   );
 };
