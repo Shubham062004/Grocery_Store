@@ -1,43 +1,49 @@
-
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Store, ArrowLeft } from 'lucide-react';
 import { productCategories } from '@/data/products';
 import { productService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { useStore } from '@/context/StoreContext';
 import ProductCard from '@/components/home/ProductCard';
 import { Product } from '@/context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MenuGridSkeleton, SearchResultsSkeleton } from '@/components/ui/SkeletonLoaders';
+import { MenuGridSkeleton } from '@/components/ui/SkeletonLoaders';
 import { LoadingTransition } from '@/components/ui/PageTransition';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { StaggerContainer, StaggerItem, HoverScale } from '@/components/ui/MicroAnimations';
 
 const Menu = () => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [products, setProducts] = useState<Product[]>([]);
   const { isLoading, setLoading } = useLoadingState();
   const { toast } = useToast();
+  const { selectedStore } = useStore();
   
-  // Load all products from API
+  // Load products based on selected store
   useEffect(() => {
     const loadProducts = async () => {
+      if (!selectedStore) return;
+      
       setLoading(true);
       try {
-        const { data } = await productService.getAll();
+        const storeId = selectedStore._id || selectedStore.id;
+        const { data } = await productService.getByStore(storeId);
         setProducts(data);
       } catch (error) {
         console.error('Error fetching products:', error);
         toast({
           title: "Error",
-          description: "Failed to load products. Using offline data.",
+          description: "Failed to load products for this store.",
           variant: "destructive",
         });
       } finally {
@@ -46,7 +52,7 @@ const Menu = () => {
     };
     
     loadProducts();
-  }, [setLoading, toast]);
+  }, [selectedStore, setLoading, toast]);
   
   // Filter products based on search term and active category
   const filteredProducts = products.filter(product => {
@@ -60,26 +66,30 @@ const Menu = () => {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
-  
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.05
-      }
-    }
-  };
-  
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { type: 'spring', stiffness: 100 }
-    }
-  };
+
+  if (!selectedStore) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background dark:bg-gray-900">
+        <Header />
+        <main className="flex-grow flex items-center justify-center pt-24 pb-10 px-4">
+          <div className="text-center max-w-md">
+            <div className="bg-primary/10 p-6 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <Store className="h-10 w-10 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold mb-4">Select a Store to Continue</h1>
+            <p className="text-muted-foreground mb-8">
+              Please choose a store from our marketplace to view their available products and start shopping.
+            </p>
+            <Button onClick={() => navigate('/')} className="w-full flex items-center justify-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Go to Store List
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col bg-background dark:bg-gray-900">
@@ -93,9 +103,14 @@ const Menu = () => {
             transition={{ duration: 0.5 }}
             className="mb-8 text-center"
           >
+            <div className="flex items-center justify-center gap-2 mb-2 text-primary">
+              <Store size={20} />
+              <span className="font-medium uppercase tracking-wider text-sm">{selectedStore.name}</span>
+            </div>
             <h1 className="text-3xl md:text-4xl font-display font-bold mb-4">Our Menu</h1>
             <p className="text-muted-foreground dark:text-gray-400 max-w-2xl mx-auto">
-              Browse our complete product catalog and add items to your cart.
+              Browsing products from <span className="font-semibold text-foreground">{selectedStore.name}</span>. 
+              {selectedStore.description}
             </p>
           </motion.div>
           
@@ -110,7 +125,7 @@ const Menu = () => {
             <HoverScale scale={1.02}>
               <Input
                 type="search"
-                placeholder="Search products..."
+                placeholder={`Search in ${selectedStore.name}...`}
                 className="pl-10 pr-4 py-2 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -169,7 +184,7 @@ const Menu = () => {
                           whileHover={{ y: -2 }}
                           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                         >
-                          <ProductCard product={product} index={index} />
+                          <ProductCard product={product} />
                         </motion.div>
                       </StaggerItem>
                     ))

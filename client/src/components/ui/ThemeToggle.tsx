@@ -7,11 +7,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 const ThemeToggle: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    // Check local storage or system preference
+    // Check local storage or default to light
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
-      const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      return (savedTheme === 'dark' || savedTheme === 'light') ? savedTheme : systemPreference;
+      // Default to 'light' unless 'dark' is explicitly saved
+      return savedTheme === 'dark' ? 'dark' : 'light';
     }
     return 'light';
   });

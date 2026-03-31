@@ -35,4 +35,14 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin };
+const merchant = (req, res, next) => {
+  if (req.user && (req.user.role === 'merchant' || req.user.role === 'admin')) {
+    next();
+  } else {
+    res.status(401);
+    const error = new Error('Not authorized as a merchant');
+    next(error);
+  }
+};
+
+module.exports = { protect, admin, merchant };
