@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { useCart, Product } from '@/context/CartContext';
-import { allProducts } from '@/data/products';
+import { productService } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/layout/Header';
@@ -22,18 +22,26 @@ const ProductDetail = () => {
   
   // Fetch product details
   useEffect(() => {
-    // Simulate loading
-    setLoading(true);
+    const fetchProduct = async () => {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const { data } = await productService.getById(id);
+        setProduct(data);
+      } catch (error) {
+        console.error('Error fetching product details:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load product details.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // Find product in our products list
-    const foundProduct = allProducts.find(p => p.id === id);
-    
-    if (foundProduct) {
-      setProduct(foundProduct);
-    }
-    
-    setLoading(false);
-  }, [id]);
+    fetchProduct();
+  }, [id, toast]);
   
   const handleAddToCart = () => {
     if (!product) return;

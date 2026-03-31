@@ -3,6 +3,7 @@ import { useInventory } from '@/hooks/use-inventory';
 import InventorySummary from '@/components/inventory/InventorySummary';
 import InventoryTable from '@/components/inventory/InventoryTable';
 import LowStockItems from '@/components/inventory/LowStockItems';
+import AddItemModal from '@/components/inventory/AddItemModal';
 import { useToast } from '@/hooks/use-toast';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { Package, Search, Plus } from 'lucide-react';
@@ -11,10 +12,11 @@ import { Button } from '@/components/ui/button';
 import { InventoryItem } from '@/types/inventory';
 
 const Inventory = () => {
-  const { inventory, isLoading, updateStockLevel, getLowStockItems } = useInventory();
+  const { inventory, isLoading, updateStockLevel, addInventoryItem } = useInventory();
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   const [filteredInventory, setFilteredInventory] = useState<InventoryItem[]>([]);
   
@@ -51,20 +53,12 @@ const Inventory = () => {
     setFilteredInventory(result);
   }, [inventory, activeFilter, searchTerm]);
   
-  const handleUpdateStock = (itemId: string, newStockLevel: number) => {
-    updateStockLevel(itemId, newStockLevel);
-    
-    toast({
-      title: "Stock Updated",
-      description: "The inventory has been updated successfully.",
-    });
+  const handleUpdateStock = async (itemId: string, newStockLevel: number) => {
+    await updateStockLevel(itemId, newStockLevel);
   };
   
   const handleAddItem = () => {
-    toast({
-      title: "Feature Coming Soon",
-      description: "The Add Item feature will be available in a future update.",
-    });
+    setIsAddModalOpen(true);
   };
   
   if (isLoading) {
@@ -124,10 +118,22 @@ const Inventory = () => {
           </div>
           
           <div className="animate-fade-in reveal reveal-from-right" style={{ animationDelay: "0.2s" }}>
-            <LowStockItems />
+            <div className="bg-card border rounded-lg p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
+                Low Stock Alerts
+              </h2>
+              <LowStockItems />
+            </div>
           </div>
         </div>
       </div>
+      
+      <AddItemModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onAdd={addInventoryItem}
+      />
       
       <div className="fixed bottom-6 right-6 z-50">
         <ThemeToggle />

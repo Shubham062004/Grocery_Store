@@ -41,6 +41,11 @@ const productSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  store: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: [true, 'Please link this product to a store'],
+  },
 }, {
   timestamps: true,
 });

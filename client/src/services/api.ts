@@ -40,10 +40,31 @@ api.interceptors.response.use(
   }
 );
 
+// Helper to transform _id to id for frontend compatibility
+const transformProduct = (p: any) => ({ ...p, id: p._id });
+
 // API Endpoints
 export const productService = {
-  getAll: () => api.get('/products'),
-  getById: (id: string) => api.get(`/products/${id}`),
+  getAll: async () => {
+    const { data } = await api.get('/products');
+    return { data: Array.isArray(data) ? data.map(transformProduct) : [] };
+  },
+  getById: async (id: string) => {
+    const { data } = await api.get(`/products/${id}`);
+    return { data: transformProduct(data) };
+  },
+  getByStore: async (storeId: string) => {
+    const { data } = await api.get(`/stores/${storeId}/products`);
+    return { data: Array.isArray(data) ? data.map(transformProduct) : [] };
+  },
+  create: async (productData: any) => {
+    const { data } = await api.post('/products', productData);
+    return { data: transformProduct(data) };
+  },
+  update: async (id: string, productData: any) => {
+    const { data } = await api.put(`/products/${id}`, productData);
+    return { data: transformProduct(data) };
+  }
 };
 
 export const authService = {
@@ -54,6 +75,11 @@ export const authService = {
 export const orderService = {
   create: (orderData: any) => api.post('/orders', orderData),
   getMyOrders: () => api.get('/orders/myorders'),
+};
+
+export const storeService = {
+  getAll: () => api.get('/stores'),
+  getById: (id: string) => api.get(`/stores/${id}`),
 };
 
 export default api;

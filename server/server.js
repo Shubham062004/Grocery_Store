@@ -22,6 +22,7 @@ app.use(cors());
 const productRoutes = require('./routes/productRoutes');
 const authRoutes = require('./routes/authRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const storeRoutes = require('./routes/storeRoutes');
 
 app.get('/', (req, res) => {
   res.send('API is running...');
@@ -30,6 +31,7 @@ app.get('/', (req, res) => {
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/stores', storeRoutes);
 
 // Error Handling Middleware
 app.use(notFound);
