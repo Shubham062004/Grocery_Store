@@ -1,133 +1,139 @@
-# Grocery Store Management System
+# 🛒 FreshCart: Multi-Merchant Grocery Platform
 
-A complete grocery store management system with product management and customer ordering capabilities.
+A modern, full-stack, production-ready grocery store management system. Featuring role-based authentication, merchant management, inventory tracking, and a seamless shopping experience for customers.
 
+![FreshCart Dashboard](https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200&h=400)
 
 ## 📋 Table of Contents
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Setup Instructions](#setup-instructions)
-- [Design Choices](#design-choices)
-- [Challenges and Solutions](#challenges-and-solutions)
-- [Optional Tasks](#optional-tasks)
-- [Future Improvements](#future-improvements)
+- [✨ Key Features](#-key-features)
+- [🛠️ Technology Stack](#️-technology-stack)
+- [🚀 Architecture](#-architecture)
+- [📦 Setup & Installation](#-setup--installation)
+- [🔐 Role-Based Access](#-role-based-access)
+- [💡 Design Philosophy](#-design-philosophy)
+- [🌐 Deployment](#-deployment)
 
-## ✨ Features
-- Browse products by category
-- View detailed product information 
-- Add products to cart from multiple pages
-- Interactive shopping cart with quantity controls
+---
+
+## ✨ Key Features
+
+### 🛍️ For Customers
+- **Dynamic Product Browsing**: Enhanced filtering by category and availability.
+- **Rich Product Details**: Comprehensive info (nutritional facts, expiration, packaging integrity).
+- **Persistent Cart & Wishlist**: Save items for later with persistent state management.
+- **Order Tracking**: Complete history of past orders with status updates.
+- **Seamless Checkout**: Simple, intuitive ordering process.
+
+### 👨‍💼 For Merchants
+- **Personalized Dashboard**: Real-time sales metrics and order management.
+- **Inventory Control**: Add, update, and delete products easily.
+- **Store Customization**: Manage store profile and branding.
+- **Stock Tracking**: Automatic stock updates upon order fulfillment.
+
+### 🛡️ Security & Auth
+- **JWT Authentication**: Secure login and sign-up with role-based routing.
+- **Protected Routes**: Middleware enforcement to prevent unauthorized access.
+- **Password Hashing**: Secure storage using Bcrypt.
+
+---
 
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **React 18** with TypeScript for type safety
-- **Tailwind CSS** for responsive styling
-- **shadcn/ui** components for consistent UI
-- **React Router** for navigation
-- **Framer Motion** for animations
-- **Lucide React** for icons
+- **Framework**: React 18 + TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State Management**: React Context API
+- **Data Fetching**: Tanstack Query (React Query) + Axios
+- **Animations**: Framer Motion
 
-## 🚀 Setup Instructions
+### Backend
+- **Runtime**: Node.js + Express.js
+- **Database**: MongoDB (Atlas) + Mongoose
+- **Auth**: JSON Web Tokens (JWT)
+- **Validation**: Zod + Express Middleware
+
+---
+
+## 🚀 Architecture
+
+The application follows a modular **Client-Server** architecture:
+
+- `client/`: A Vite-powered React application using a component-driven design.
+- `server/`: An Express.js REST API using the MVC (Model-View-Controller) pattern.
+
+---
+
+## 📦 Setup & Installation
 
 ### Prerequisites
-- npm or yarn
+- Node.js (v18+)
+- MongoDB (Local or Atlas URI)
 
-### Installation Steps
+### Backend Setup
+1. Navigate to the server directory:
+   ```bash
+   cd server
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file based on `.env.example`:
+   ```env
+   PORT=5100
+   MONGODB_URI=your_mongodb_uri
+   JWT_SECRET=your_secret_key
+   NODE_ENV=development
+   ```
+4. Start the server:
+   ```bash
+   npm run dev
+   ```
 
-1. Clone the repository
-```sh
-git clone https://github.com/Shubham062004/Inventory-Managment-System.git
-cd client
-```
+### Frontend Setup
+1. Navigate to the client directory:
+   ```bash
+   cd client
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-2. Install dependencies
-```sh
-npm install
-# or
-yarn install
-```
+---
 
-3. Start the development server
-```sh
-npm run dev
-# or
-yarn dev
-```
+## 🔐 Role-Based Access
 
-4. Open your browser and navigate to `http://localhost:5173`
+| Feature | Customer | Merchant | Admin |
+|---------|:---:|:---:|:---:|
+| Browse Products | ✅ | ✅ | ✅ |
+| Place Orders | ✅ | ❌ | ❌ |
+| Manage Inventory | ❌ | ✅ | ✅ |
+| Manage Stores | ❌ | ✅ | ✅ |
+| Access Dashboard | ❌ | ✅ | ✅ |
 
-## 💡 Design Choices
+---
 
-### Architecture
-- **Component-Based Design**: Organized code into reusable, modular components for maintainability
-- **Context API**: Used React Context for state management (shopping cart, authentication)
-- **Responsive First**: Designed for all screen sizes from mobile to desktop
-- **Progressive Enhancement**: Core functionality works even if JavaScript is disabled
+## 💡 Design Philosophy
 
-### UI/UX Design
-- **Clean, Accessible Interface**: Focused on ease of use and accessibility
-- **Modal Dialogs**: Used for product details to prevent unnecessary page navigation
-- **Visual Feedback**: Animations for actions like adding to cart or form submissions
-- **Consistent Styling**: Used Tailwind CSS and shadcn/ui for a cohesive look
+- **User-Centric**: Modal-based flows for quick interactions without page reloads.
+- **Atomic Components**: Reusable UI elements built on top of Radix UI.
+- **Visual Feedback**: Micro-animations and toast notifications for every user action.
+- **Type Safety**: End-to-end TypeScript integration to minimize runtime errors.
 
-### Data Management
-- **Local Storage**: Used for persisting cart and user data between sessions
-- **Mock Data**: Implemented detailed mock product data with all required attributes
-- **Query Caching**: Used Tanstack Query for efficient data fetching and caching
+---
 
-## 🧩 Challenges and Solutions
+## 🌐 Deployment
 
-### Challenge 1: Complex Product Detail Display
-**Problem**: Needed to show detailed product information without navigating away from the current page.
-**Solution**: Implemented a modal approach that overlays product details on the current page, maintaining context while providing all required information.
+- **Frontend**: [Vercel](https://grocery-store-client-rose.vercel.app/)
+- **Backend**: Can be deployed to Render, Heroku, or DigitalOcean.
 
-### Challenge 2: Cart State Management Across Pages
-**Problem**: Cart updates from the home page weren't reflecting in the header and other pages.
-**Solution**: Refactored the CartContext to use a more robust state management approach and ensured the addToCart function was consistently implemented across all product cards.
+---
 
-### Challenge 3: Form Validation and User Experience
-**Problem**: Needed robust form validation for login/signup while maintaining a good user experience.
-**Solution**: Implemented centered modal forms with animations and clear validation feedback, preserving context while ensuring data integrity.
+## 📄 License
 
-### Challenge 4: Responsive Design for Various Device Sizes
-**Problem**: Ensuring the application looks and works well on all device sizes.
-**Solution**: Used Tailwind's responsive classes systematically and tested across multiple viewport sizes to ensure consistency.
-
-## 🎯 Optional Tasks
-
-### Completed Optional Tasks
-- **Enhanced Product Detail View**: Added comprehensive product information including expiration dates, packaging integrity, nutritional information, and ingredient lists
-- **Cart Animation**: Added subtle animations when products are added to cart
-- **Cross-Page Cart Functionality**: Enabled adding products to cart from any page in the application
-- **Improved Login/Signup Experience**: Centered modal forms with animations
-
-## 🔮 Future Improvements
-
-- Backend integration with authentication
-- Order processing and payment gateway integration
-- User profiles with order history
-- Product reviews and ratings
-- Wishlist functionality
-- Mobile app using React Native
-
-
-## Deployment
-
-This application can be deployed to any static hosting service:
-- [Vercel](https://grocery-store-client-rose.vercel.app/)
-
-
-## License
-
-[MIT](LICENSE)
-
-<!-- Background image of index page -->
-
-<!-- 
-<div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                  <img 
-                    src="https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&q=80&w=1160&h=800" 
-                    alt="Fresh grocery products" 
-                    className="w-full h-auto object-cover"
-                  /> -->
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
