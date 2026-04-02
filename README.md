@@ -137,3 +137,5 @@ The application follows a modular **Client-Server** architecture:
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+<!-- MONGODB_URI=mongodb+srv://shubhamkumar081908:Q1234098@cluster0.7ydpad4.mongodb.net/grocery_store -->
