@@ -1,23 +1,47 @@
 
-import React, { useState, useEffect } from 'react';
-import { MapPin, Search, ShoppingBag, User, LogIn, Store, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapPin, Search, ShoppingBag, User, LogIn, Store as StoreIcon, ChevronDown, Check } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useStore } from '@/context/StoreContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, useNavigate } from 'react-router-dom';
+import { storeService } from '@/services/api';
+
+import { useAuth } from '@/context/AuthContext';
 
 const Header: React.FC = () => {
   const { totalItems } = useCart();
   const { selectedStore, setSelectedStore } = useStore();
+  const { user, isAuthenticated, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [stores, setStores] = useState<any[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   
-  // Check login status
+  // Fetch stores for dropdown
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    setIsLoggedIn(!!user);
+    const fetchStores = async () => {
+      try {
+        const { data } = await storeService.getAll();
+        setStores(data);
+      } catch (error) {
+        console.error('Failed to fetch stores:', error);
+      }
+    };
+    fetchStores();
+  }, []);
+  
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
   
   // Change header style on scroll
@@ -35,14 +59,14 @@ const Header: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    setIsLoggedIn(false);
+    logout();
     navigate('/');
   };
 
-  const handleChangeStore = () => {
-    setSelectedStore(null);
-    navigate('/');
+  const handleSelectStore = (store: any) => {
+    setSelectedStore(store);
+    setIsDropdownOpen(false);
+    navigate('/menu');
   };
 
   return (
@@ -61,24 +85,51 @@ const Header: React.FC = () => {
             <span className="hidden sm:inline">Marketplace</span>
           </Link>
           
-          {/* Store Selector */}
-          <button 
-            type="button"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-background border border-primary/20 text-sm font-medium hover:bg-primary/5 hover:border-primary/40 smooth-transition shadow-sm cursor-pointer z-[60]"
-            onClick={(e) => {
-              console.log('Store selector clicked');
-              handleChangeStore();
-            }}
-          >
-            <Store size={16} className="text-primary shrink-0" />
-            <span className="max-w-[100px] md:max-w-[200px] truncate text-foreground font-semibold">
-              {selectedStore ? selectedStore.name : 'Select Store'}
-            </span>
-            {selectedStore && (
-              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Switch</span>
+          {/* Store Selector Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              type="button"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-background border border-primary/20 text-sm font-medium hover:bg-primary/5 hover:border-primary/40 smooth-transition shadow-sm cursor-pointer"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              <StoreIcon size={16} className="text-primary shrink-0" />
+              <span className="max-w-[100px] md:max-w-[200px] truncate text-foreground font-semibold">
+                {selectedStore ? selectedStore.name : 'Select Store'}
+              </span>
+              <ChevronDown size={14} className={`text-muted-foreground shrink-0 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-border overflow-hidden z-[70] animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-2 max-h-[300px] overflow-y-auto">
+                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b mb-1">
+                    Available Stores
+                  </div>
+                  {stores.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground italic">No stores found</div>
+                  ) : (
+                    stores.map((store) => (
+                      <button
+                        key={store._id}
+                        onClick={() => handleSelectStore(store)}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-left hover:bg-primary/5 transition-colors group ${
+                          selectedStore?._id === store._id ? 'bg-primary/10 text-primary font-bold' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-1.5 rounded-md bg-white dark:bg-gray-700 shadow-sm overflow-hidden w-8 h-8 flex-shrink-0">
+                             <img src={store.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=50'} alt="" className="w-full h-full object-cover rounded-sm" />
+                          </div>
+                          <span className="truncate">{store.name}</span>
+                        </div>
+                        {selectedStore?._id === store._id && <Check size={14} className="text-primary" />}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
             )}
-            <ChevronDown size={14} className="text-muted-foreground shrink-0" />
-          </button>
+          </div>
           
           {/* Search bar */}
           <div className="flex-1 max-w-sm relative hidden lg:block">
@@ -93,7 +144,7 @@ const Header: React.FC = () => {
           {/* Right side navigation buttons */}
           <div className="flex items-center gap-2 md:gap-3">
             {/* User or Login buttons */}
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <div className="relative group">
                 <Button 
                   variant="ghost" 
@@ -104,7 +155,18 @@ const Header: React.FC = () => {
                 </Button>
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg overflow-hidden z-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 border border-border">
                   <div className="py-2">
-                    <Link to="/inventory" className="block px-4 py-2 text-sm hover:bg-muted font-medium">Merchant Dashboard</Link>
+                    <div className="px-4 py-2 border-b">
+                      <p className="text-xs text-muted-foreground">Logged in as {user?.name}</p>
+                    </div>
+                    {user?.role === 'merchant' && (
+                      <Link to="/inventory" className="block px-4 py-2 text-sm hover:bg-muted font-medium">Merchant Dashboard</Link>
+                    )}
+                    {user?.role === 'customer' && (
+                      <>
+                        <Link to="/orders" className="block px-4 py-2 text-sm hover:bg-muted">My Orders</Link>
+                        <Link to="/wishlist" className="block px-4 py-2 text-sm hover:bg-muted">Wishlist</Link>
+                      </>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full px-4 py-2 text-sm text-left text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"

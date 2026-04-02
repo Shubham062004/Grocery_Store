@@ -39,7 +39,7 @@ const loginUser = async (req, res, next) => {
 // @route   POST /api/users
 // @access  Public
 const registerUser = async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -54,6 +54,7 @@ const registerUser = async (req, res, next) => {
       name,
       email,
       password,
+      role: role || 'customer',
     });
 
     if (user) {

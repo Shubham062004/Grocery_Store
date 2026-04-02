@@ -64,7 +64,14 @@ export const productService = {
   update: async (id: string, productData: any) => {
     const { data } = await api.put(`/products/${id}`, productData);
     return { data: transformProduct(data) };
-  }
+  },
+  delete: async (id: string) => {
+    await api.delete(`/products/${id}`);
+  },
+  getMyProducts: async () => {
+    const { data } = await api.get('/products/myproducts');
+    return { data: Array.isArray(data) ? data.map(transformProduct) : [] };
+  },
 };
 
 export const authService = {
@@ -80,6 +87,8 @@ export const orderService = {
 export const storeService = {
   getAll: () => api.get('/stores'),
   getById: (id: string) => api.get(`/stores/${id}`),
+  create: (storeData: any) => api.post('/stores', storeData),
+  getMine: () => api.get('/stores/mine'),
 };
 
 export default api;

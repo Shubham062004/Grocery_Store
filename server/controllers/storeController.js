@@ -46,8 +46,28 @@ const getStoreProducts = async (req, res, next) => {
   }
 };
 
+// @desc    Get current user's store
+// @route   GET /api/stores/mine
+// @access  Private/Merchant
+const getMine = async (req, res, next) => {
+  try {
+    const store = await Store.findOne({ owner: req.user._id });
+    
+    if (store) {
+      res.json(store);
+    } else {
+      res.status(404);
+      const error = new Error('Store not found');
+      next(error);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createStore,
   getStores,
   getStoreProducts,
+  getMine,
 };

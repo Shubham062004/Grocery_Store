@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { orderService } from '@/services/api';
+import { useStore } from './StoreContext';
 
 export interface Product {
   id: string;
@@ -49,6 +50,7 @@ const STANDARD_DELIVERY_FEE = 40;
 const CART_STORAGE_KEY = 'grocery-cart-items';
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { selectedStore } = useStore();
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
@@ -79,6 +81,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Failed to save cart to localStorage:', error);
     }
   }, [items]);
+
+  // Clear cart if store changes
+  useEffect(() => {
+    if (selectedStore && items.length > 0) {
+      const firstItemStoreId = (items[0].product as any).store;
+      const currentStoreId = selectedStore._id || selectedStore.id;
+      
+      if (firstItemStoreId && firstItemStoreId !== currentStoreId) {
+        setItems([]);
+        localStorage.removeItem(CART_STORAGE_KEY);
+      }
+    }
+  }, [selectedStore, items]);
   
   // Calculate totals whenever cart items change
   useEffect(() => {
@@ -145,6 +160,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const checkout = async () => {
+    if (!selectedStore) throw new Error("Please select a store first.");
+
     const orderData = {
       orderItems: items.map(item => ({
         name: item.product.name,
@@ -160,7 +177,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         country: 'India'
       },
       paymentMethod,
-      totalPrice: totalPrice + (totalPrice * 0.18) // Including tax
+      store: selectedStore._id || selectedStore.id
     };
 
     try {
