@@ -10,7 +10,6 @@ const addOrderItems = async (req, res, next) => {
     orderItems,
     shippingAddress,
     paymentMethod,
-    totalPrice,
   } = req.body;
 
   if (orderItems && orderItems.length === 0) {
@@ -18,12 +17,15 @@ const addOrderItems = async (req, res, next) => {
     return next(new Error('No order items'));
   }
 
-  // Start Transaction
+  // Start Session for Transaction
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // 1. Validate and Deduct Stock
+    let totalPrice = 0;
+    const validatedOrderItems = [];
+
+    // 1. Validate Items, Get DB Prices, and Deduct Stock
     for (const item of orderItems) {
       const product = await Product.findById(item.product).session(session);
 
@@ -37,14 +39,28 @@ const addOrderItems = async (req, res, next) => {
         throw new Error(`Insufficient stock for product: ${item.name}. Available: ${product.countInStock}`);
       }
 
-      // Deduct stock
+      // Calculate total using DB price
+      const itemTotal = product.price * item.qty;
+      totalPrice += itemTotal;
+
+      // Deduct stock atomically
       product.countInStock -= item.qty;
+      product.inStock = product.countInStock > 0;
       await product.save({ session });
+
+      // Add to validated items (use DB price)
+      validatedOrderItems.push({
+        name: product.name,
+        qty: item.qty,
+        image: product.image,
+        price: product.price,
+        product: product._id,
+      });
     }
 
-    // 2. Create Order
+    // 2. Create Order with backend-calculated totalPrice
     const order = new Order({
-      orderItems,
+      orderItems: validatedOrderItems,
       user: req.user._id,
       shippingAddress,
       paymentMethod,

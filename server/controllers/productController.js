@@ -5,8 +5,16 @@ const Store = require('../models/storeModel');
 // @route   GET /api/products
 // @access  Public
 const getProducts = async (req, res) => {
+  const pageSize = 20;
+  const page = Number(req.query.pageNumber) || 1;
+  const storeId = req.query.storeId;
+
   try {
-    const products = await Product.find({});
+    const filter = storeId ? { store: storeId } : {};
+    const products = await Product.find(filter)
+      .limit(pageSize)
+      .skip(pageSize * (page - 1));
+    
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -36,9 +44,14 @@ const updateProduct = async (req, res) => {
   const { name, price, description, image, category, countInStock, unit, brand } = req.body;
 
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate('store');
 
     if (product) {
+      // Ownership validation
+      if (product.store.owner.toString() !== req.user._id.toString()) {
+        return res.status(401).json({ message: 'Not authorized to update this product' });
+      }
+
       product.name = name || product.name;
       product.price = price || product.price;
       product.description = description || product.description;
@@ -63,15 +76,12 @@ const updateProduct = async (req, res) => {
 // @route   POST /api/products
 // @access  Private/Merchant
 const createProduct = async (req, res) => {
-  let { name, price, description, image, category, countInStock, unit, brand, store } = req.body;
+  let { name, price, description, image, category, countInStock, unit, brand } = req.body;
 
   try {
-    if (!store) {
-      const merchantStore = await Store.findOne({ owner: req.user._id });
-      if (!merchantStore) {
-        return res.status(400).json({ message: 'Merchant must have a store to create products' });
-      }
-      store = merchantStore._id;
+    const merchantStore = await Store.findOne({ owner: req.user._id });
+    if (!merchantStore) {
+      return res.status(400).json({ message: 'Merchant must have a store to create products' });
     }
 
     const product = new Product({
@@ -83,7 +93,7 @@ const createProduct = async (req, res) => {
       countInStock,
       unit,
       brand,
-      store,
+      store: merchantStore._id,
       inStock: countInStock > 0,
     });
 
@@ -94,9 +104,51 @@ const createProduct = async (req, res) => {
   }
 };
 
+// @desc    Delete a product
+// @route   DELETE /api/products/:id
+// @access  Private/Merchant
+const deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate('store');
+
+    if (product) {
+      // Ownership validation
+      if (product.store.owner.toString() !== req.user._id.toString()) {
+        return res.status(401).json({ message: 'Not authorized to delete this product' });
+      }
+
+      await product.deleteOne(); // Updated from .remove() to .deleteOne() for Mongoose 6+
+      res.json({ message: 'Product removed' });
+    } else {
+      res.status(404).json({ message: 'Product not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get merchant's products
+// @route   GET /api/products/myproducts
+// @access  Private/Merchant
+const getMyProducts = async (req, res) => {
+  try {
+    const store = await Store.findOne({ owner: req.user._id });
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found for this merchant' });
+    }
+
+    const products = await Product.find({ store: store._id });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
   updateProduct,
   createProduct,
+  deleteProduct,
+  getMyProducts,
 };

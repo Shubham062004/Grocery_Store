@@ -104,14 +104,14 @@ const Menu = () => {
             className="mb-8 text-center"
           >
             <div className="flex items-center justify-center gap-2 mb-2 text-primary">
-              <Store size={20} />
-              <span className="font-medium uppercase tracking-wider text-sm">{selectedStore.name}</span>
+              <Store size={25} />
+              {/* <span className="font-medium uppercase tracking-wider text-sm">{selectedStore.name} Menu</span> */}
+            <h1 className="text-3xl md:text-4xl font-display font-bold mb-4 pt-4">{selectedStore.name} Menu</h1>
             </div>
-            <h1 className="text-3xl md:text-4xl font-display font-bold mb-4">Our Menu</h1>
-            <p className="text-muted-foreground dark:text-gray-400 max-w-2xl mx-auto">
+            {/* <p className="text-muted-foreground dark:text-gray-400 max-w-2xl mx-auto">
               Browsing products from <span className="font-semibold text-foreground">{selectedStore.name}</span>. 
               {selectedStore.description}
-            </p>
+            </p> */}
           </motion.div>
           
           {/* Search bar */}

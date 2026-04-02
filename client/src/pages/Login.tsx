@@ -10,10 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { authService } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -25,15 +27,20 @@ const Login = () => {
     try {
       const { data } = await authService.login({ email, password });
       
-      // Store user info (including JWT) in localStorage
-      localStorage.setItem('user', JSON.stringify(data));
+      // Update global context
+      login(data);
       
       toast({
         title: "Login successful",
         description: `Welcome back, ${data.name}!`,
       });
       
-      navigate('/');
+      // Role-based redirection
+      if (data.role === 'merchant') {
+        navigate('/inventory');
+      } else {
+        navigate('/');
+      }
     } catch (error: any) {
       toast({
         title: "Login failed",
